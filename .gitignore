@@ -33,7 +33,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-myvirtual/
+myvenv/
 build/
 develop-eggs/
 dist/
