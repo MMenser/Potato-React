@@ -21,10 +21,10 @@ def data():
 
 def main():
     # Start the data receiving thread before running Flask
-    t1 = threading.Thread(target=recieveData, daemon=True)
+    t1 = threading.Thread(target=lambda: app.run(debug=True, port=8080, use_reloader=False))
     t1.start()
 
-    app.run(debug=True, port=8080)
+    recieveData()
 
 
 def recieveData():
@@ -34,8 +34,10 @@ def recieveData():
             while True:
                 if ser.in_waiting:
                     data = ser.readline().decode('utf-8').strip()
-                    parameters = data.split('=')
-                    parameters = parameters[1:] # Remove +RCV tag
+                    print(f"Data: {data}")
+                    parameters = data.split('=')[1]
+                    parameters = parameters.split(',')
+                    print(parameters)
                     # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
                     global avgTemp
                     avgTemp = parameters[2]
