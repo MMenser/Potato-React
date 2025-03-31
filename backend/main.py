@@ -6,14 +6,21 @@ import threading
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
-avgTemp = 0.0
+
+avgTemperature = 0.0
+ambientTemperature = 0.0
+targetTemperature = 0.0
+currentVoltage = 0.0
 
 @app.route("/data", methods=['GET'])
 def data():
     return jsonify(
         {
             "data": [
-                avgTemp
+                avgTemperature,
+                ambientTemperature,
+                targetTemperature,
+                currentVoltage
             ]
         }
     )
@@ -39,8 +46,12 @@ def recieveData():
                     parameters = parameters.split(',')
                     print(parameters)
                     # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
-                    global avgTemp
-                    avgTemp = parameters[2]
+                    global avgTemperature, ambientTemperature, targetTemperature, currentVoltage
+                    parameters = parameters[2].split('|')
+                    avgTemperature = parameters[0]
+                    ambientTemperature = parameters[1]
+                    targetTemperature = parameters[2]
+                    currentVoltage = parameters[3]
 
                     csv_writer.writerow(parameters)
                     print(f"Data written: {parameters}")

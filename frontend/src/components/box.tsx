@@ -9,11 +9,17 @@ import axios
 
 function Box({id}: BoxProps) {
     const [averageTemperature, setAverageTemperature] = useState(0.0);
+    const [ambientTemperature, setAmbientTemperature] = useState(0.0);
+    const [targetTemperature, setTargetTemperature] = useState(0.0);
+    const [currentVoltage, setCurrentVoltage] = useState(0.0);
     
     const fetchAPI = async () => {
         const response = await axios.get("http://127.0.0.1:8080/data")
-        setAverageTemperature(response.data.data[0])
-        console.log(response.data.data[0]);
+        setAverageTemperature(response.data.data[0]);
+        setAmbientTemperature(response.data.data[1]);
+        setTargetTemperature(response.data.data[2]);
+        setCurrentVoltage(response.data.data[3]);
+        console.log(response.data.data);
       };
     
       useEffect(() => {
@@ -29,12 +35,16 @@ function Box({id}: BoxProps) {
                 <p className="text-center">{averageTemperature} F</p>
             </div>
             <div className="w-1/12 h-1/2 bg-gray-300 p-2 mx-auto rounded-md shadow-inner">
-                <p className="text-center">Average</p>
-                <p className="text-center">{averageTemperature} F</p>
+                <p className="text-center">Ambient</p>
+                <p className="text-center">{ambientTemperature} F</p>
             </div>
             <div className="w-1/12 h-1/2 bg-gray-300 p-2 mx-auto rounded-md shadow-inner">
-                <p className="text-center">Average</p>
-                <p className="text-center">{averageTemperature} F</p>
+                <p className="text-center">Target</p>
+                <p className="text-center">{targetTemperature} F</p>
+            </div>
+            <div className="w-1/12 h-1/2 bg-gray-300 p-2 mx-auto rounded-md shadow-inner">
+                <p className="text-center">Current Voltage</p>
+                <p className="text-center">{currentVoltage} F</p>
             </div>
             </div>
 
