@@ -13,12 +13,16 @@ function Box({ id }: BoxProps) {
   const [currentVoltage, setCurrentVoltage] = useState(0.0);
 
   const fetchAPI = async () => {
-    const response = await axios.get("http://127.0.0.1:8080/data");
-    setAverageTemperature(response.data.data[0]);
-    setAmbientTemperature(response.data.data[1]);
-    setTargetTemperature(response.data.data[2]);
-    setCurrentVoltage(response.data.data[3]);
-    console.log(response.data.data);
+    try {
+      const response = await axios.get("http://127.0.0.1:8080/getData/" + id + "/1"); // Get the most recent data point for this box
+        const latest = response.data[0]; // Or use .at(-1) for the most recent at the end
+        setAverageTemperature(parseFloat(latest._averageTemperature));
+        setAmbientTemperature(parseFloat(latest._ambientTemperature));
+        setTargetTemperature(parseFloat(latest._targetTemperature));
+        setCurrentVoltage(latest._currentVoltage);
+    } catch (err) {
+      console.error("Error fetching box data:", err);
+    }
   };
 
   useEffect(() => {
@@ -50,7 +54,7 @@ function Box({ id }: BoxProps) {
           </div>
         </div>
         <div className="mx-12">
-        <DataGraph />
+        <DataGraph id={id} />
         </div>
 
       </div>
