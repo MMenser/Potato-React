@@ -57,7 +57,11 @@ def getData(boxID, limit=10):
             "_averageTemperature": row[3],
             "_targetTemperature": row[4],
             "_currentVoltage": row[5],
-            "_timestamp": row[6]
+            "_sensor1": row[6],
+            "_sensor2": row[7],
+            "_sensor3": row[8],
+            "_sensor4": row[9],
+            "_timestamp": row[10]
         })
     cur.close()
     conn.close()

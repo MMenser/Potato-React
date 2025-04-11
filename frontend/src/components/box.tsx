@@ -12,14 +12,24 @@ function Box({ id }: BoxProps) {
   const [targetTemperature, setTargetTemperature] = useState(0.0);
   const [currentVoltage, setCurrentVoltage] = useState(0.0);
 
+  const [sensor1, setSensor1] = useState(0.0);
+  const [sensor2, setSensor2] = useState(0.0);
+  const [sensor3, setSensor3] = useState(0.0);
+  const [sensor4, setSensor4] = useState(0.0);
+
   const fetchAPI = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8080/getData/" + id + "/1"); // Get the most recent data point for this box
-        const latest = response.data[0]; // Or use .at(-1) for the most recent at the end
-        setAverageTemperature(parseFloat(latest._averageTemperature));
-        setAmbientTemperature(parseFloat(latest._ambientTemperature));
-        setTargetTemperature(parseFloat(latest._targetTemperature));
-        setCurrentVoltage(latest._currentVoltage);
+      const response = await axios.get("http://127.0.0.1:8080/getData/" + id + "/1");
+      const latest = response.data[0];
+      setAverageTemperature(parseFloat(latest._averageTemperature));
+      setAmbientTemperature(parseFloat(latest._ambientTemperature));
+      setTargetTemperature(parseFloat(latest._targetTemperature));
+      setCurrentVoltage(latest._currentVoltage);
+
+      setSensor1(latest._sensor1);
+      setSensor2(latest._sensor2);
+      setSensor3(latest._sensor3);
+      setSensor4(latest._sensor4);
     } catch (err) {
       console.error("Error fetching box data:", err);
     }
@@ -52,11 +62,26 @@ function Box({ id }: BoxProps) {
             <p className="text-white w-18">Voltage</p>
             <p className="text-green-500">{currentVoltage} V</p>
           </div>
+          <div className="flex flex-row justify-start">
+            <p className="text-white w-18">Sensor 1</p>
+            <p className="text-green-500">{sensor1} °F</p>
+          </div>
+          <div className="flex flex-row justify-start">
+            <p className="text-white w-18">Sensor 2</p>
+            <p className="text-green-500">{sensor2} °F</p>
+          </div>
+          <div className="flex flex-row justify-start">
+            <p className="text-white w-18">Sensor 3</p>
+            <p className="text-green-500">{sensor3} °F</p>
+          </div>
+          <div className="flex flex-row justify-start">
+            <p className="text-white w-18">Sensor 4</p>
+            <p className="text-green-500">{sensor4} °F</p>
+          </div>
         </div>
-        <div className="mx-12">
-        <DataGraph id={id} />
+        <div className="mx-12 w-3/4">
+          <DataGraph id={id, } />
         </div>
-
       </div>
     </div>
   );
