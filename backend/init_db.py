@@ -6,7 +6,7 @@ load_dotenv()
 
 conn = psycopg2.connect(
         host="localhost",
-        database="potatoDB",
+        database="potatodb",
         user=os.environ['DB_USERNAME'],
         password=os.environ['DB_PASSWORD'])
 
