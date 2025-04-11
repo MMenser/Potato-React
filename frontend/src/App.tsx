@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import "./styles.css";
 import Box from "./components/box";
 function App() {
