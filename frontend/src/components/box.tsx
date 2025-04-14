@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import DataGraph from "./datagraph";
 import axios from "axios";
 
+interface DataRow {
+  _entryId: number,
+  _boxId: number,
+  _ambientTemperature: number,
+  _averageTemperature: number,
+  _targetTemperature: number,
+  _currentVoltage: number,
+  _sensor1: number,
+  _sensor2: number,
+  _sensor3: number,
+  _sensor4: number,
+}
+
 interface BoxProps {
   id: number;
 }
@@ -11,6 +24,10 @@ function Box({ id }: BoxProps) {
   const [ambientTemperature, setAmbientTemperature] = useState(0.0);
   const [targetTemperature, setTargetTemperature] = useState(0.0);
   const [currentVoltage, setCurrentVoltage] = useState(0.0);
+  const [exportTimeLimit, setExportTimeLimit] = useState(30);
+  const [customTime, setCustomTime] = useState("");
+  const [isCustom, setIsCustom] = useState(false);
+
 
   const [sensor1, setSensor1] = useState(0.0);
   const [sensor2, setSensor2] = useState(0.0);
@@ -35,6 +52,34 @@ function Box({ id }: BoxProps) {
     }
   };
 
+  const exportData = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8080/getData/" + id + "/" + exportTimeLimit);
+      const data = response.data;
+      const headers = Object.keys(data[0]).join(',');
+      const rows = (data as DataRow[]).map(row =>
+        Object.values(row).map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")
+      );
+      const csvContent = [headers, ...rows].join("\n");
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `box_${id}_data_${exportTimeLimit}min.csv`;
+      document.body.appendChild(a); // required for Firefox
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    }
+    catch (err) {
+      console.log("Error: ", err);
+    }
+  }
+
   useEffect(() => {
     fetchAPI();
   }, []);
@@ -46,6 +91,51 @@ function Box({ id }: BoxProps) {
       </h2>
       <div className="flex flex-row">
         <div className="flex flex-col space-y-2">
+          <div className="flex flex-row items-center space-x-2">
+            <button
+              type="button"
+              onClick={exportData}
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+            >
+              Export
+            </button>
+
+            <select
+              value={isCustom ? "custom" : exportTimeLimit}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "custom") {
+                  setIsCustom(true);
+                  setExportTimeLimit(0);
+                } else {
+                  setIsCustom(false);
+                  setExportTimeLimit(Number(value));
+                }
+              }}
+              className="bg-gray-700 text-white rounded px-2 py-1"
+            >
+              <option value={30}>Last 30 Min</option>
+              <option value={720}>Last 12 Hr</option>
+              <option value={1440}>Last 24 Hr</option>
+              <option value="custom">Custom...</option>
+            </select>
+
+            {isCustom && (
+              <input
+                type="number"
+                min={1}
+                placeholder="Minutes"
+                value={customTime}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setCustomTime(e.target.value);
+                  setExportTimeLimit(val);
+                }}
+                className="bg-gray-700 text-white rounded px-2 py-1 w-24 text-center"
+              />
+            )}
+          </div>
+
           <div className="flex flex-row justify-start">
             <p className="text-white w-18">Average</p>
             <p className="text-green-500">{averageTemperature} °F</p>
@@ -80,6 +170,8 @@ function Box({ id }: BoxProps) {
           </div>
         </div>
         <div className="mx-12 w-3/4">
+        <DataGraph id={id} whichGraph={0}></DataGraph>
+        <DataGraph id={id} whichGraph={1}></DataGraph>
         </div>
       </div>
     </div>
