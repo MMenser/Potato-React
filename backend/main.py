@@ -25,16 +25,20 @@ def getDBConnection():
         password=os.environ['DB_PASSWORD'])
     return conn
 
-def addData(boxID, avgerageTemperature, ambientTemperature, targetTemperature, currentVoltage):
+def addData(boxID, avgerageTemperature, ambientTemperature, targetTemperature, currentVoltage, sensor1, sensor2, sensor3, sensor4):
     conn = getDBConnection()
     cur = conn.cursor()
-    cur.execute('INSERT INTO _box (_boxID, _ambientTemperature, _averageTemperature, _targetTemperature, _currentVoltage)'
-                'VALUES (%s, %s, %s, %s, %s)',
+    cur.execute('INSERT INTO _box (_boxID, _ambientTemperature, _averageTemperature, _targetTemperature, _currentVoltage, _sensor1, _sensor2, _sensor3, _sensor4)'
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
                 (boxID,
                 ambientTemperature,
                  avgerageTemperature,
                  targetTemperature,
-                 currentVoltage)
+                 currentVoltage,
+                 sensor1,
+                 sensor2,
+                 sensor3,
+                 sensor4)
                 )
     conn.commit()
     cur.close()
@@ -88,7 +92,7 @@ def recieveData():
                     parameters = parameters.split(',')
                     print(parameters)
                     # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
-                    # BoxID | Average Temperature | Ambient Temperature | Target Temperature | Current Voltage
+                    # BoxID | Average Temperature | Ambient Temperature | Target Temperature | Current Voltage | Sensor1 | Sensor2 | Sensor3 | Sensor4
                     # 0       1                   2                     3                     4
                     parameters = parameters[2].split('|')
                     boxID = parameters[0]
@@ -96,6 +100,10 @@ def recieveData():
                     ambientT = parameters[2]
                     targetT = parameters[3]
                     currentV = parameters[4]
+                    sensor1 = parameters[5]
+                    sensor2 = parameters[6]
+                    sensor3 = parameters[7]
+                    sensor4 = parameters[8]
                     addData(boxID, avgT, ambientT, targetT, currentV)
 
 main()
