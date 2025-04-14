@@ -80,7 +80,6 @@ function Box({ id }: BoxProps) {
           </div>
         </div>
         <div className="mx-12 w-3/4">
-          <DataGraph id={id, } />
         </div>
       </div>
     </div>
