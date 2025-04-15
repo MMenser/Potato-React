@@ -20,7 +20,7 @@ cors = CORS(app, origins='*')
 def getDBConnection():
     conn = psycopg2.connect(
         host="localhost",
-        database="potatoDB",
+        database="potatodb",
         user=os.environ['DB_USERNAME'],
         password=os.environ['DB_PASSWORD'])
     return conn
@@ -72,7 +72,6 @@ def getData(boxID, limit=10):
     return jsonify(data), 200
 
 def main():
-
     # Start the data receiving thread before running Flask
     t1 = threading.Thread(target=lambda: app.run(debug=True, port=8080, use_reloader=False))
     t1.start()
@@ -82,28 +81,28 @@ def main():
 
 def recieveData():
     with serial.Serial('/dev/ttyS0', 9600, timeout=1) as ser:
-        with open('temp1.csv', 'a', newline='') as csvfile:
-            csv_writer = csv.writer(csvfile)
-            while True:
-                if ser.in_waiting:
-                    data = ser.readline().decode('utf-8').strip()
-                    print(f"Data: {data}")
-                    parameters = data.split('=')[1]
-                    parameters = parameters.split(',')
-                    print(parameters)
-                    # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
-                    # BoxID | Average Temperature | Ambient Temperature | Target Temperature | Current Voltage | Sensor1 | Sensor2 | Sensor3 | Sensor4
-                    # 0       1                   2                     3                     4
-                    parameters = parameters[2].split('|')
-                    boxID = parameters[0]
-                    avgT = parameters[1]
-                    ambientT = parameters[2]
-                    targetT = parameters[3]
-                    currentV = parameters[4]
-                    sensor1 = parameters[5]
-                    sensor2 = parameters[6]
-                    sensor3 = parameters[7]
-                    sensor4 = parameters[8]
-                    addData(boxID, avgT, ambientT, targetT, currentV)
+        while True:
+            if ser.in_waiting:
+                data = ser.readline().decode('utf-8').strip()
+                print(f"Data: {data}")
+                parameters = data.split('=')[1]
+                parameters = parameters.split(',')
+                print(parameters)
+                # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
+                # BoxID | Average Temperature | Ambient Temperature | Target Temperature | Current Voltage | Sensor1 | Sensor2 | Sensor3 | Sensor4
+                # 0       1                   2                     3                     4
+                parameters = parameters[2].split('|')
+                print(f"Parameters: {parameters}");
+                boxID = parameters[0]
+                avgT = parameters[1]
+                ambientT = parameters[2]
+                targetT = parameters[3]
+                currentV = parameters[4]
+                sensor1 = parameters[5]
+                sensor2 = parameters[6]
+                sensor3 = parameters[7]
+                sensor4 = parameters[8]
+                with app.app_context():
+                    addData(boxID, avgT, ambientT, targetT, currentV, sensor1, sensor2, sensor3, sensor4)
 
 main()
