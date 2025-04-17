@@ -21,7 +21,7 @@ cur.execute('''
         _boxID INTEGER NOT NULL,
         _ambientTemperature NUMERIC(5,2) NOT NULL,
         _averageTemperature NUMERIC(5,2) NOT NULL,
-        _delta NUMERIC(5,2) NOT NULL,
+        _delta INTEGER NOT NULL,
         _currentVoltage NUMERIC(5,2) NOT NULL,
         _sensor1 NUMERIC(5,2) DEFAULT 0,
         _sensor2 NUMERIC(5,2) DEFAULT 0,

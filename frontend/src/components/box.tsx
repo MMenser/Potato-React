@@ -7,7 +7,7 @@ interface DataRow {
   _boxId: number,
   _ambientTemperature: number,
   _averageTemperature: number,
-  _targetTemperature: number,
+  _delta: number,
   _currentVoltage: number,
   _sensor1: number,
   _sensor2: number,
@@ -22,12 +22,13 @@ interface BoxProps {
 function Box({ id }: BoxProps) {
   const [averageTemperature, setAverageTemperature] = useState(0.0);
   const [ambientTemperature, setAmbientTemperature] = useState(0.0);
-  const [targetTemperature, setTargetTemperature] = useState(0.0);
+  const [delta, setDelta] = useState(0);
   const [currentVoltage, setCurrentVoltage] = useState(0.0);
   const [exportTimeLimit, setExportTimeLimit] = useState(30);
   const [customTime, setCustomTime] = useState("");
   const [isCustom, setIsCustom] = useState(false);
 
+  const [inputDelta, setInputDelta] = useState(0);
 
   const [sensor1, setSensor1] = useState(0.0);
   const [sensor2, setSensor2] = useState(0.0);
@@ -40,7 +41,7 @@ function Box({ id }: BoxProps) {
       const latest = response.data[0];
       setAverageTemperature(parseFloat(latest._averageTemperature));
       setAmbientTemperature(parseFloat(latest._ambientTemperature));
-      setTargetTemperature(parseFloat(latest._targetTemperature));
+      setDelta(parseFloat(latest._delta));
       setCurrentVoltage(latest._currentVoltage);
 
       setSensor1(latest._sensor1);
@@ -80,8 +81,25 @@ function Box({ id }: BoxProps) {
     }
   }
 
+  const changeDelta = async () => {
+    if (isNaN(inputDelta) || inputDelta < 0 || inputDelta > 30) {
+      alert("Delta must be a number between 0 and 30.");
+      return;
+    }
+  
+    try {
+      const res = await axios.post(`http://127.0.0.1:8080/changeDelta/${id}/${inputDelta}`);
+      console.log("Response:", res.data);
+      setDelta(inputDelta); // update local state
+    } catch (err) {
+      console.error("Error updating delta:", err);
+      alert("Failed to update delta. Check console for more info.");
+    }
+  };
+
   useEffect(() => {
     fetchAPI();
+    setInputDelta(delta)
   }, []);
 
   return (
@@ -135,7 +153,22 @@ function Box({ id }: BoxProps) {
               />
             )}
           </div>
-
+          <div className="flex flex-row items-center space-x-2">
+            <input
+              type="number"
+              step="0.1"
+              value={inputDelta}
+              onChange={(e) => setInputDelta(parseFloat(e.target.value))}
+              className="bg-gray-700 text-white rounded px-2 py-1 w-24 text-center"
+            />
+            <button
+              type="button"
+              onClick={changeDelta}
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+            >
+              Change Delta
+            </button>
+          </div>
           <div className="flex flex-row justify-start">
             <p className="text-white w-18">Average</p>
             <p className="text-green-500">{averageTemperature} °F</p>
@@ -145,8 +178,8 @@ function Box({ id }: BoxProps) {
             <p className="text-green-500">{ambientTemperature} °F</p>
           </div>
           <div className="flex flex-row justify-start">
-            <p className="text-white w-18">Target</p>
-            <p className="text-green-500">{targetTemperature} °F</p>
+            <p className="text-white w-18">Delta</p>
+            <p className="text-green-500">{delta} °F</p>
           </div>
           <div className="flex flex-row justify-start">
             <p className="text-white w-18">Voltage</p>
@@ -170,8 +203,8 @@ function Box({ id }: BoxProps) {
           </div>
         </div>
         <div className="mx-12 w-3/4">
-        <DataGraph id={id} whichGraph={0}></DataGraph>
-        <DataGraph id={id} whichGraph={1}></DataGraph>
+          <DataGraph id={id} whichGraph={0}></DataGraph>
+          <DataGraph id={id} whichGraph={1}></DataGraph>
         </div>
       </div>
     </div>

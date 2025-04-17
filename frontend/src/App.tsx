@@ -1,5 +1,5 @@
 import "./styles.css";
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { FIREBASE_AUTH } from '../firebase';
 import Box from "./components/box";
 import Login from "./components/login";
