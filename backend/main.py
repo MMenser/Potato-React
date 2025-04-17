@@ -9,6 +9,11 @@ import psycopg2
 app = Flask(__name__)
 cors = CORS(app, origins='*')
 
+serial_lock = threading.Lock()
+ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
+
+boxIDtoLoraAddress = {1:9} # Box 1 is Lora Address 9
+
 '''
     Sending data from each box every 15 seconds results in 23,040 data points per day.
     This is 161,280 data points per week.
@@ -45,6 +50,28 @@ def addData(boxID, avgerageTemperature, ambientTemperature, targetTemperature, c
     conn.close()
     return jsonify({"status": "success"}), 200
 
+@app.route("/changeDelta/<int:boxID>/<int:delta>", methods=['POST'])
+def changeDelta(boxID, delta):
+    if delta < 0 or delta > 30: # Delta can only be in range of 0-30
+        return jsonify({"status": "error", "message": "Delta out of range"}), 400
+    sendLoraMessage(boxID, delta)
+    return jsonify({"status": "sent", "message": {boxID, delta}}), 200
+
+def sendLoraMessage(boxID, delta):
+    loraAddress = None
+    try:
+        loraAddress = boxIDtoLoraAddress[boxID]
+    except:
+        print("Error: Box ID matched to Lora Address")
+        return
+
+    message = f"AT=SEND={loraAddress},{len(delta)}, {delta}\r\n"
+    with serial_lock:
+        ser.write(message.encode('utf-8'))
+    print(f"[TX] Sent: {message}")
+
+
+
 @app.route("/getData/<int:boxID>/<int:limit>", methods=['GET'])
 def getData(boxID, limit=10):
     print(f"BoxID: {boxID}, Limit: {limit}")
@@ -80,29 +107,38 @@ def main():
 
 
 def recieveData():
-    with serial.Serial('/dev/ttyS0', 9600, timeout=1) as ser:
-        while True:
+    while True:
+        with serial_lock:
             if ser.in_waiting:
                 data = ser.readline().decode('utf-8').strip()
-                print(f"Data: {data}")
-                parameters = data.split('=')[1]
-                parameters = parameters.split(',')
-                print(parameters)
-                # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
-                # BoxID | Average Temperature | Ambient Temperature | Target Temperature | Current Voltage | Sensor1 | Sensor2 | Sensor3 | Sensor4
-                # 0       1                   2                     3                     4
-                parameters = parameters[2].split('|')
-                print(f"Parameters: {parameters}");
-                boxID = parameters[0]
-                avgT = parameters[1]
-                ambientT = parameters[2]
-                targetT = parameters[3]
-                currentV = parameters[4]
-                sensor1 = parameters[5]
-                sensor2 = parameters[6]
-                sensor3 = parameters[7]
-                sensor4 = parameters[8]
-                with app.app_context():
-                    addData(boxID, avgT, ambientT, targetT, currentV, sensor1, sensor2, sensor3, sensor4)
+        if not data:
+            continue
+        print(f"Data: {data}")
+        try:
+            if not data.startswith('+RCV'):
+                continue
+            parts = data.split('=')[1].split(',')
+            if len(parts) < 3:
+                continue
+            sensorData = parts[2].split('|')
+            if len(sensorData) < 9:
+                continue
+            # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
+            # BoxID | Average Temperature | Ambient Temperature | Delta (how many degrees difference from ambient) | Current Voltage | Sensor1 | Sensor2 | Sensor3 | Sensor4
+            # 0       1                   2                     3                     4
+            print(f"Parameters: {sensorData}")
+            boxID = sensorData[0]
+            avgT = sensorData[1]
+            ambientT = sensorData[2]
+            delta = sensorData[3]
+            currentV = sensorData[4]
+            sensor1 = sensorData[5]
+            sensor2 = sensorData[6]
+            sensor3 = sensorData[7]
+            sensor4 = sensorData[8]
+            with app.app_context():
+                addData(boxID, avgT, ambientT, delta, currentV, sensor1, sensor2, sensor3, sensor4)
+        except Exception as e:
+            print(f"Error: {e}")
 
 main()
