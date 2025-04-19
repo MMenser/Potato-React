@@ -3,16 +3,16 @@ import DataGraph from "./datagraph";
 import axios from "axios";
 
 interface DataRow {
-  _entryId: number,
-  _boxId: number,
-  _ambientTemperature: number,
-  _averageTemperature: number,
-  _delta: number,
-  _currentVoltage: number,
-  _sensor1: number,
-  _sensor2: number,
-  _sensor3: number,
-  _sensor4: number,
+  _entryId: number;
+  _boxId: number;
+  _ambientTemperature: number;
+  _averageTemperature: number;
+  _delta: number;
+  _currentVoltage: number;
+  _sensor1: number;
+  _sensor2: number;
+  _sensor3: number;
+  _sensor4: number;
 }
 
 interface BoxProps {
@@ -37,7 +37,9 @@ function Box({ id }: BoxProps) {
 
   const fetchAPI = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8080/getData/" + id + "/1");
+      const response = await axios.get(
+        "http://127.0.0.1:8080/getData/" + id + "/1"
+      );
       const latest = response.data[0];
       setAverageTemperature(parseFloat(latest._averageTemperature));
       setAmbientTemperature(parseFloat(latest._ambientTemperature));
@@ -55,11 +57,15 @@ function Box({ id }: BoxProps) {
 
   const exportData = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8080/getData/" + id + "/" + exportTimeLimit);
+      const response = await axios.get(
+        "http://127.0.0.1:8080/getData/" + id + "/" + exportTimeLimit
+      );
       const data = response.data;
-      const headers = Object.keys(data[0]).join(',');
-      const rows = (data as DataRow[]).map(row =>
-        Object.values(row).map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")
+      const headers = Object.keys(data[0]).join(",");
+      const rows = (data as DataRow[]).map((row) =>
+        Object.values(row)
+          .map((val) => `"${String(val).replace(/"/g, '""')}"`)
+          .join(",")
       );
       const csvContent = [headers, ...rows].join("\n");
 
@@ -75,20 +81,21 @@ function Box({ id }: BoxProps) {
       a.remove();
 
       URL.revokeObjectURL(url);
-    }
-    catch (err) {
+    } catch (err) {
       console.log("Error: ", err);
     }
-  }
+  };
 
   const changeDelta = async () => {
     if (isNaN(inputDelta) || inputDelta < 0 || inputDelta > 30) {
       alert("Delta must be a number between 0 and 30.");
       return;
     }
-  
+
     try {
-      const res = await axios.post(`http://127.0.0.1:8080/changeDelta/${id}/${inputDelta}`);
+      const res = await axios.post(
+        `http://127.0.0.1:8080/changeDelta/${id}/${inputDelta}`
+      );
       console.log("Response:", res.data);
       setDelta(inputDelta); // update local state
     } catch (err) {
@@ -99,7 +106,7 @@ function Box({ id }: BoxProps) {
 
   useEffect(() => {
     fetchAPI();
-    setInputDelta(delta)
+    setInputDelta(delta);
   }, []);
 
   return (
@@ -110,14 +117,6 @@ function Box({ id }: BoxProps) {
       <div className="flex flex-row">
         <div className="flex flex-col space-y-2">
           <div className="flex flex-row items-center space-x-2">
-            <button
-              type="button"
-              onClick={exportData}
-              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-            >
-              Export
-            </button>
-
             <select
               value={isCustom ? "custom" : exportTimeLimit}
               onChange={(e) => {
@@ -152,6 +151,13 @@ function Box({ id }: BoxProps) {
                 className="bg-gray-700 text-white rounded px-2 py-1 w-24 text-center"
               />
             )}
+            <button
+              type="button"
+              onClick={exportData}
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+            >
+              Export
+            </button>
           </div>
           <div className="flex flex-row items-center space-x-2">
             <input
