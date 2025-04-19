@@ -54,30 +54,39 @@ def addData(boxID, avgerageTemperature, ambientTemperature, targetTemperature, c
 def changeDelta(boxID, delta):
     if delta < 0 or delta > 30: # Delta can only be in range of 0-30
         return jsonify({"status": "error", "message": "Delta out of range"}), 400
-    sendLoraMessage(boxID, delta)
-    return jsonify({"status": "sent", "message": {boxID, delta}}), 200
+    content = 'D' + delta
+    sendLoraMessage(boxID, content)
+    return jsonify({"status": "sent", "message": {boxID, content}}), 200
 
-def sendLoraMessage(boxID, delta):
+@app.route("/changeVoltage/<int:boxID>/<int:voltage>", methods=['POST'])
+def changeVoltage(boxID, voltage):
+    if voltage < 0 or voltage > 130: # Voltage can be 0-130
+        return jsonify({"status": "error", "message": "Delta out of range"}), 400
+    content = 'V' + voltage
+    sendLoraMessage(boxID, content)
+    return jsonify({"status": "sent", "message": {boxID, content}}), 200
+
+def sendLoraMessage(boxID, content):
     loraAddress = None
     try:
         loraAddress = boxIDtoLoraAddress[boxID]
     except:
         print("Error: Box ID matched to Lora Address")
         return
-
-    message = f"AT=SEND={loraAddress},{len(delta)}, {delta}\r\n"
+    message = f"AT=SEND={loraAddress},{len(content)}, {content}\r\n"
     with serial_lock:
         ser.write(message.encode('utf-8'))
     print(f"[TX] Sent: {message}")
-
-
 
 @app.route("/getData/<int:boxID>/<int:limit>", methods=['GET'])
 def getData(boxID, limit=10):
     print(f"BoxID: {boxID}, Limit: {limit}")
     conn = getDBConnection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM _box WHERE _boxID = %s ORDER BY _timestamp DESC LIMIT %s', (boxID, limit))
+    if limit == 0:
+        cur.execute('SELECT * FROM _box WHERE _boxID = %s ORDER BY _timestamp DESC', (boxID))
+    else:
+        cur.execute('SELECT * FROM _box WHERE _boxID = %s ORDER BY _timestamp DESC LIMIT %s', (boxID, limit))
     rows = cur.fetchall()
     data = []
     for row in rows:

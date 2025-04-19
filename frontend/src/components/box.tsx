@@ -104,6 +104,23 @@ function Box({ id }: BoxProps) {
     }
   };
 
+  const changeVoltage = async () => {
+    if (isNaN(currentVoltage) || currentVoltage < 0 || currentVoltage > 130) {
+      alert("Voltage must be a number between 0 and 130.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `http://127.0.0.1:8080/changeVoltage/${id}/${currentVoltage}`
+      );
+      console.log("Response:", res.data);
+    } catch (err) {
+      console.error("Error updating delta:", err);
+      alert("Failed to update delta. Check console for more info.");
+    }
+  }
+
   useEffect(() => {
     fetchAPI();
     setInputDelta(delta);
@@ -129,11 +146,11 @@ function Box({ id }: BoxProps) {
                   setExportTimeLimit(Number(value));
                 }
               }}
-              className="bg-gray-700 text-white rounded px-2 py-1"
+              className="w-28 bg-gray-700 text-white rounded px-2 py-1"
             >
               <option value={30}>Last 30 Min</option>
               <option value={720}>Last 12 Hr</option>
-              <option value={1440}>Last 24 Hr</option>
+              <option value={0}>All</option>
               <option value="custom">Custom...</option>
             </select>
 
@@ -148,13 +165,13 @@ function Box({ id }: BoxProps) {
                   setCustomTime(e.target.value);
                   setExportTimeLimit(val);
                 }}
-                className="bg-gray-700 text-white rounded px-2 py-1 w-24 text-center"
+                className="bg-gray-700 text-white rounded px-2 py-1 w-28 text-center"
               />
             )}
             <button
               type="button"
               onClick={exportData}
-              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+              className="w-36 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
             >
               Export
             </button>
@@ -162,17 +179,33 @@ function Box({ id }: BoxProps) {
           <div className="flex flex-row items-center space-x-2">
             <input
               type="number"
-              step="0.1"
+              step="1.0"
               value={inputDelta}
               onChange={(e) => setInputDelta(parseFloat(e.target.value))}
-              className="bg-gray-700 text-white rounded px-2 py-1 w-24 text-center"
+              className="bg-gray-700 text-white rounded px-2 py-1 w-28 text-center"
             />
             <button
               type="button"
               onClick={changeDelta}
-              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+              className="w-36 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
             >
               Change Delta
+            </button>
+          </div>
+          <div className="flex flex-row items-center space-x-2">
+            <input
+              type="number"
+              step="1.0"
+              value={inputDelta}
+              onChange={(e) => setCurrentVoltage(parseFloat(e.target.value))}
+              className="bg-gray-700 text-white rounded px-2 py-1 w-28 text-center"
+            />
+            <button
+              type="button"
+              onClick={changeVoltage}
+              className="w-36 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+            >
+              Align Voltage
             </button>
           </div>
           <div className="flex flex-row justify-start">
