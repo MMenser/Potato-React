@@ -38,7 +38,7 @@ function Box({ id }: BoxProps) {
   const fetchAPI = async () => {
     try {
       const response = await axios.get(
-        "http://10.109.202.69:8080/getData/" + id + "/1"
+        "https://10.109.202.69:8080/getData/" + id + "/1"
       );
       const latest = response.data[0];
       setAverageTemperature(parseFloat(latest._averageTemperature));
@@ -58,7 +58,7 @@ function Box({ id }: BoxProps) {
   const exportData = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8080/getData/" + id + "/" + exportTimeLimit
+        "https://127.0.0.1:8080/getData/" + id + "/" + exportTimeLimit
       );
       const data = response.data;
       const headers = Object.keys(data[0]).join(",");
@@ -94,7 +94,7 @@ function Box({ id }: BoxProps) {
 
     try {
       const res = await axios.post(
-        `http://127.0.0.1:8080/changeDelta/${id}/${inputDelta}`
+        `https://127.0.0.1:8080/changeDelta/${id}/${inputDelta}`
       );
       console.log("Response:", res.data);
       setDelta(inputDelta); // update local state
@@ -112,7 +112,7 @@ function Box({ id }: BoxProps) {
 
     try {
       const res = await axios.post(
-        `http://127.0.0.1:8080/changeVoltage/${id}/${currentVoltage}`
+        `https://127.0.0.1:8080/changeVoltage/${id}/${currentVoltage}`
       );
       console.log("Response:", res.data);
     } catch (err) {

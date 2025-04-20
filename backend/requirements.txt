@@ -3,3 +3,4 @@ flask-cors
 pyserial
 psycopg2-binary
 python-dotenv
+pyopenssl

@@ -20,7 +20,7 @@ function App() {
     <div>
       {user ? (<div className="bg-black min-h-screen flex flex-row">
         <div className="w-full">
-          <Box id={2} />
+          <Box id={1} />
         </div>
 
       </div>) : (
