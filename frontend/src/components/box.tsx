@@ -38,7 +38,7 @@ function Box({ id }: BoxProps) {
   const fetchAPI = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8080/getData/" + id + "/1"
+        "http://10.109.202.69:8080/getData/" + id + "/1"
       );
       const latest = response.data[0];
       setAverageTemperature(parseFloat(latest._averageTemperature));

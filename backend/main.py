@@ -1,11 +1,12 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 import serial
-import csv
 import threading
 import os
 import psycopg2
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
 cors = CORS(app, origins='*')
 
@@ -30,15 +31,15 @@ def getDBConnection():
         password=os.environ['DB_PASSWORD'])
     return conn
 
-def addData(boxID, avgerageTemperature, ambientTemperature, targetTemperature, currentVoltage, sensor1, sensor2, sensor3, sensor4):
+def addData(boxID, avgerageTemperature, ambientTemperature, delta, currentVoltage, sensor1, sensor2, sensor3, sensor4):
     conn = getDBConnection()
     cur = conn.cursor()
-    cur.execute('INSERT INTO _box (_boxID, _ambientTemperature, _averageTemperature, _targetTemperature, _currentVoltage, _sensor1, _sensor2, _sensor3, _sensor4)'
+    cur.execute('INSERT INTO _box (_boxID, _ambientTemperature, _averageTemperature, _delta, _currentVoltage, _sensor1, _sensor2, _sensor3, _sensor4)'
                 'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
                 (boxID,
                 ambientTemperature,
                  avgerageTemperature,
-                 targetTemperature,
+                 delta,
                  currentVoltage,
                  sensor1,
                  sensor2,
@@ -54,17 +55,17 @@ def addData(boxID, avgerageTemperature, ambientTemperature, targetTemperature, c
 def changeDelta(boxID, delta):
     if delta < 0 or delta > 30: # Delta can only be in range of 0-30
         return jsonify({"status": "error", "message": "Delta out of range"}), 400
-    content = 'D' + delta
+    content = 'D' + str(delta)
     sendLoraMessage(boxID, content)
-    return jsonify({"status": "sent", "message": {boxID, content}}), 200
+    return jsonify({"status": "sent"}), 200
 
 @app.route("/changeVoltage/<int:boxID>/<int:voltage>", methods=['POST'])
 def changeVoltage(boxID, voltage):
     if voltage < 0 or voltage > 130: # Voltage can be 0-130
         return jsonify({"status": "error", "message": "Delta out of range"}), 400
-    content = 'V' + voltage
+    content = 'V' + str(voltage)
     sendLoraMessage(boxID, content)
-    return jsonify({"status": "sent", "message": {boxID, content}}), 200
+    return jsonify({"status": "sent"}), 200
 
 def sendLoraMessage(boxID, content):
     loraAddress = None
@@ -73,7 +74,7 @@ def sendLoraMessage(boxID, content):
     except:
         print("Error: Box ID matched to Lora Address")
         return
-    message = f"AT=SEND={loraAddress},{len(content)}, {content}\r\n"
+    message = f"AT+SEND={loraAddress},{len(content)},{content}\r\n"
     with serial_lock:
         ser.write(message.encode('utf-8'))
     print(f"[TX] Sent: {message}")
@@ -95,7 +96,7 @@ def getData(boxID, limit=10):
             "_boxID": row[1],
             "_ambientTemperature": row[2],
             "_averageTemperature": row[3],
-            "_targetTemperature": row[4],
+            "_delta": row[4],
             "_currentVoltage": row[5],
             "_sensor1": row[6],
             "_sensor2": row[7],
@@ -109,18 +110,19 @@ def getData(boxID, limit=10):
 
 def main():
     # Start the data receiving thread before running Flask
-    t1 = threading.Thread(target=lambda: app.run(debug=True, port=8080, use_reloader=False))
+    t1 = threading.Thread(target=lambda: app.run(host="0.0.0.0", port=8080, use_reloader=False))
     t1.start()
 
     recieveData()
 
-
 def recieveData():
     while True:
+        data = None
         with serial_lock:
             if ser.in_waiting:
+                print("getting data")
                 data = ser.readline().decode('utf-8').strip()
-        if not data:
+        if data == None:
             continue
         print(f"Data: {data}")
         try:
