@@ -27,7 +27,7 @@ function datagraph({ id, whichGraph }: GraphProps) {
 
   const fetchAPI = async () => {
     try {
-      const response = await axios.get("https://10.109.202.69:8080/getData/" + id + "/" + timeScale); // Get the most recent data point for this box
+      const response = await axios.get("http://10.109.202.69:5000/getData/" + id + "/" + timeScale); // Get the most recent data point for this box
       console.log("Reponse Data: ", response.data);
       const parsedData: GraphData[] = response.data.map((item: any) => ({
         averageTemperature: item._averageTemperature,

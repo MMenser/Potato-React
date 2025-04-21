@@ -110,7 +110,7 @@ def getData(boxID, limit=10):
 
 def main():
     # Start the data receiving thread before running Flask
-    t1 = threading.Thread(target=lambda: app.run(ssl_context='adhoc', host="0.0.0.0", port=8080, use_reloader=False))
+    t1 = threading.Thread(target=lambda: app.run(host="0.0.0.0", use_reloader=False))
     t1.start()
 
     recieveData()
