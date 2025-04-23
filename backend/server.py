@@ -51,6 +51,10 @@ def addData(boxID, avgerageTemperature, ambientTemperature, delta, currentVoltag
     conn.close()
     return jsonify({"status": "success"}), 200
 
+@app.route("/")
+def hello():
+    return "<h1 style='color:blue'>Hello There!</h1>"
+
 @app.route("/changeDelta/<int:boxID>/<int:delta>", methods=['POST'])
 def changeDelta(boxID, delta):
     if delta < 0 or delta > 30: # Delta can only be in range of 0-30
@@ -108,12 +112,12 @@ def getData(boxID, limit=10):
     conn.close()
     return jsonify(data), 200
 
-def main():
-    # Start the data receiving thread before running Flask
-    t1 = threading.Thread(target=lambda: app.run(host="0.0.0.0", use_reloader=False))
-    t1.start()
+# def main():
+#     # Start the data receiving thread before running Flask
+#     # t1 = threading.Thread(target=lambda: app.run(host="0.0.0.0", use_reloader=False))
+#     # t1.start()
 
-    recieveData()
+#     recieveData()
 
 def recieveData():
     while True:
@@ -152,4 +156,4 @@ def recieveData():
         except Exception as e:
             print(f"Error: {e}")
 
-main()
+# main()
