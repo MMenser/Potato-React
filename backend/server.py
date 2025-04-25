@@ -13,7 +13,7 @@ cors = CORS(app, origins='*')
 serial_lock = threading.Lock()
 ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
 
-boxIDtoLoraAddress = {1:9, 2:18} # Box 1 is Lora Address 9
+boxIDtoLoraAddress = {1:9, 2:18, 3:27, 4:36} # Box 1 is Lora Address 9
 
 '''
     Sending data from each box every 15 seconds results in 23,040 data points per day.
