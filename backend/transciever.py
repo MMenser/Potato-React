@@ -1,0 +1,93 @@
+import threading
+import serial
+import os
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
+ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
+serial_lock = threading.Lock()
+boxIDtoLoraAddress = {1:9, 2:18} # Box 1 is Lora Address 9
+
+
+def getDBConnection():
+    conn = psycopg2.connect(
+        host="localhost",
+        database="potatodb",
+        user=os.environ['DB_USERNAME'],
+        password=os.environ['DB_PASSWORD'])
+    return conn
+
+def recieveData():
+    while True:
+        data = None
+        with serial_lock:
+            if ser.in_waiting:
+                print("getting data")
+                data = ser.readline().decode('utf-8').strip()
+        if data == None:
+            continue
+        print(f"Data: {data}")
+        try:
+            if not data.startswith('+RCV'):
+                continue
+            parts = data.split('=')[1].split(',')
+            if len(parts) < 3:
+                continue
+            sensorData = parts[2].split('|')
+            if len(sensorData) < 9:
+                continue
+            # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
+            # BoxID | Average Temperature | Ambient Temperature | Delta (how many degrees difference from ambient) | Current Voltage | Sensor1 | Sensor2 | Sensor3 | Sensor4
+            # 0       1                   2                     3                     4
+            print(f"Parameters: {sensorData}")
+            boxID = sensorData[0]
+            avgT = sensorData[1]
+            ambientT = sensorData[2]
+            delta = sensorData[3]
+            currentV = sensorData[4]
+            sensor1 = sensorData[5]
+            sensor2 = sensorData[6]
+            sensor3 = sensorData[7]
+            sensor4 = sensorData[8]
+            addData(boxID, avgT, ambientT, delta, currentV, sensor1, sensor2, sensor3, sensor4)
+        except Exception as e:
+            print(f"Error: {e}")
+
+def addData(boxID, avgerageTemperature, ambientTemperature, delta, currentVoltage, sensor1, sensor2, sensor3, sensor4):
+    conn = getDBConnection()
+    cur = conn.cursor()
+    cur.execute('INSERT INTO _box (_boxID, _ambientTemperature, _averageTemperature, _delta, _currentVoltage, _sensor1, _sensor2, _sensor3, _sensor4)'
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                (boxID,
+                ambientTemperature,
+                 avgerageTemperature,
+                 delta,
+                 currentVoltage,
+                 sensor1,
+                 sensor2,
+                 sensor3,
+                 sensor4)
+                )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return;
+
+def sendLoraMessage(boxID, content):
+    loraAddress = None
+    try:
+        loraAddress = boxIDtoLoraAddress[boxID]
+    except:
+        print("Error: Box ID matched to Lora Address")
+        return
+    message = f"AT+SEND={loraAddress},{len(content)},{content}\r\n"
+    with serial_lock:
+        ser.write(message.encode('utf-8'))
+    print(f"[TX] Sent: {message}")
+
+def main():
+    recieveData()
+
+if __name__ == "__main__":
+    main()

@@ -38,7 +38,7 @@ function Box({ id }: BoxProps) {
   const fetchAPI = async () => {
     try {
       const response = await axios.get(
-        "http://10.109.202.69:5000/getData/" + id + "/1"
+        "http://localhost/getData/" + id + "/1"
       );
       const latest = response.data[0];
       setAverageTemperature(parseFloat(latest._averageTemperature));
@@ -58,7 +58,7 @@ function Box({ id }: BoxProps) {
   const exportData = async () => {
     try {
       const response = await axios.get(
-        "http://10.109.202.69:5000/getData/" + id + "/" + exportTimeLimit
+        "http://localhost/getData/" + id + "/" + exportTimeLimit
       );
       const data = response.data;
       const headers = Object.keys(data[0]).join(",");
@@ -150,7 +150,7 @@ function Box({ id }: BoxProps) {
             >
               <option value={30}>Last 30 Min</option>
               <option value={720}>Last 12 Hr</option>
-              <option value={0}>All</option>
+              <option value={99}>All</option>
               <option value="custom">Custom...</option>
             </select>
 

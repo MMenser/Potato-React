@@ -1,19 +1,14 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-import serial
-import threading
 import os
 import psycopg2
 from dotenv import load_dotenv
+from transciever import sendLoraMessage
 
 load_dotenv()
 app = Flask(__name__)
 cors = CORS(app, origins='*')
 
-serial_lock = threading.Lock()
-ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
-
-boxIDtoLoraAddress = {1:9, 2:18, 3:27, 4:36} # Box 1 is Lora Address 9
 
 '''
     Sending data from each box every 15 seconds results in 23,040 data points per day.
@@ -31,25 +26,6 @@ def getDBConnection():
         password=os.environ['DB_PASSWORD'])
     return conn
 
-def addData(boxID, avgerageTemperature, ambientTemperature, delta, currentVoltage, sensor1, sensor2, sensor3, sensor4):
-    conn = getDBConnection()
-    cur = conn.cursor()
-    cur.execute('INSERT INTO _box (_boxID, _ambientTemperature, _averageTemperature, _delta, _currentVoltage, _sensor1, _sensor2, _sensor3, _sensor4)'
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                (boxID,
-                ambientTemperature,
-                 avgerageTemperature,
-                 delta,
-                 currentVoltage,
-                 sensor1,
-                 sensor2,
-                 sensor3,
-                 sensor4)
-                )
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({"status": "success"}), 200
 
 @app.route("/")
 def hello():
@@ -71,25 +47,14 @@ def changeVoltage(boxID, voltage):
     sendLoraMessage(boxID, content)
     return jsonify({"status": "sent"}), 200
 
-def sendLoraMessage(boxID, content):
-    loraAddress = None
-    try:
-        loraAddress = boxIDtoLoraAddress[boxID]
-    except:
-        print("Error: Box ID matched to Lora Address")
-        return
-    message = f"AT+SEND={loraAddress},{len(content)},{content}\r\n"
-    with serial_lock:
-        ser.write(message.encode('utf-8'))
-    print(f"[TX] Sent: {message}")
 
 @app.route("/getData/<int:boxID>/<int:limit>", methods=['GET'])
 def getData(boxID, limit=10):
     print(f"BoxID: {boxID}, Limit: {limit}")
     conn = getDBConnection()
     cur = conn.cursor()
-    if limit == 0:
-        cur.execute('SELECT * FROM _box WHERE _boxID = %s ORDER BY _timestamp DESC', (boxID))
+    if limit == 99:
+        cur.execute('SELECT * FROM _box WHERE _boxID = %s ORDER BY _timestamp DESC', ([boxID]))
     else:
         cur.execute('SELECT * FROM _box WHERE _boxID = %s ORDER BY _timestamp DESC LIMIT %s', (boxID, limit))
     rows = cur.fetchall()
@@ -111,49 +76,3 @@ def getData(boxID, limit=10):
     cur.close()
     conn.close()
     return jsonify(data), 200
-
-# def main():
-#     # Start the data receiving thread before running Flask
-#     # t1 = threading.Thread(target=lambda: app.run(host="0.0.0.0", use_reloader=False))
-#     # t1.start()
-
-#     recieveData()
-
-def recieveData():
-    while True:
-        data = None
-        with serial_lock:
-            if ser.in_waiting:
-                print("getting data")
-                data = ser.readline().decode('utf-8').strip()
-        if data == None:
-            continue
-        print(f"Data: {data}")
-        try:
-            if not data.startswith('+RCV'):
-                continue
-            parts = data.split('=')[1].split(',')
-            if len(parts) < 3:
-                continue
-            sensorData = parts[2].split('|')
-            if len(sensorData) < 9:
-                continue
-            # Address - Data Length -- ASCII Data -- Signal Strength(RSSI) -- Signal-to-noise ratio
-            # BoxID | Average Temperature | Ambient Temperature | Delta (how many degrees difference from ambient) | Current Voltage | Sensor1 | Sensor2 | Sensor3 | Sensor4
-            # 0       1                   2                     3                     4
-            print(f"Parameters: {sensorData}")
-            boxID = sensorData[0]
-            avgT = sensorData[1]
-            ambientT = sensorData[2]
-            delta = sensorData[3]
-            currentV = sensorData[4]
-            sensor1 = sensorData[5]
-            sensor2 = sensorData[6]
-            sensor3 = sensorData[7]
-            sensor4 = sensorData[8]
-            with app.app_context():
-                addData(boxID, avgT, ambientT, delta, currentV, sensor1, sensor2, sensor3, sensor4)
-        except Exception as e:
-            print(f"Error: {e}")
-
-# main()
