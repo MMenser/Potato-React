@@ -124,7 +124,7 @@ function Box({ id }: BoxProps) {
   useEffect(() => {
     fetchAPI();
     setInputDelta(delta);
-  }, []);
+  }, [id]);
 
   return (
     <div className="w-full h-full p-5 bg-black border-1 border-white">
