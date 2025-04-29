@@ -53,7 +53,7 @@ def getData(boxID, limit=10):
     print(f"BoxID: {boxID}, Limit: {limit}")
     conn = getDBConnection()
     cur = conn.cursor()
-    if limit == 99:
+    if limit == 99:              
         cur.execute('SELECT * FROM _box WHERE _boxID = %s ORDER BY _timestamp DESC', ([boxID]))
     else:
         cur.execute('SELECT * FROM _box WHERE _boxID = %s ORDER BY _timestamp DESC LIMIT %s', (boxID, limit))

@@ -54,7 +54,7 @@ function App() {
 
           {/* Display the selected box */}
           <div className="w-full flex justify-center mt-4">
-            <Box id={4} />
+            <Box id={selectedBox} />
           </div>
         </div>
       ) : (
