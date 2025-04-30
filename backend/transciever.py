@@ -2,13 +2,13 @@ import threading
 import serial
 import os
 import psycopg2
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
 serial_lock = threading.Lock()
 boxIDtoLoraAddress = {1:9, 2:18} # Box 1 is Lora Address 9
-
 
 def getDBConnection():
     conn = psycopg2.connect(
@@ -17,6 +17,40 @@ def getDBConnection():
         user=os.environ['DB_USERNAME'],
         password=os.environ['DB_PASSWORD'])
     return conn
+
+def pushToThingSpeak(boxId, avgT, ambientT, delta, currentV, s1, s2, s3, s4):
+    try:
+        api_key = ''
+        match boxId:
+            case 1:
+                os.getenv("THINGSPEAK_API_WRITE_KEY1")
+            case 2:
+                os.getenv("THINGSPEAK_API_WRITE_KEY2")
+            case 3:
+                os.getenv("THINGSPEAK_API_WRITE_KEY3")
+            case 4:
+                os.getenv("THINGSPEAK_API_WRITE_KEY4")
+        url = os.getenv("THINGSPEAK_URL")
+
+        payload = {
+            'api_key': api_key,
+            'field1': ambientT,
+            'field2': avgT,
+            'field3': delta,
+            'field4': currentV,
+            'field5': s1,
+            'field6': s2,
+            'field7': s3,
+            'field8': s4
+        }
+
+        response = requests.get(url, params=payload)
+        if response.status_code != 200:
+            print(f"ThingSpeak error: {response.status_code} - {response.text}")
+        else:
+            print(f"ThingSpeak update ID: {response.text}")
+    except Exception as e:
+        print(f"Failed to send to ThingSpeak: {e}")
 
 def recieveData():
     while True:
@@ -51,6 +85,7 @@ def recieveData():
             sensor3 = sensorData[7]
             sensor4 = sensorData[8]
             addData(boxID, avgT, ambientT, delta, currentV, sensor1, sensor2, sensor3, sensor4)
+            pushToThingSpeak(boxID, avgT, ambientT, delta, currentV, sensor1, sensor2, sensor3, sensor4)
         except Exception as e:
             print(f"Error: {e}")
 
