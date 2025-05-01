@@ -94,7 +94,7 @@ function Box({ id }: BoxProps) {
 
     try {
       const res = await axios.post(
-        `http://10.109.202.69:5000/changeDelta/${id}/${inputDelta}`
+        `http://localhost/changeDelta/${id}/${inputDelta}`
       );
       console.log("Response:", res.data);
       setDelta(inputDelta); // update local state
@@ -112,7 +112,7 @@ function Box({ id }: BoxProps) {
 
     try {
       const res = await axios.post(
-        `http://10.109.202.69:5000/changeVoltage/${id}/${currentVoltage}`
+        `http://localhost/changeVoltage/${id}/${currentVoltage}`
       );
       console.log("Response:", res.data);
     } catch (err) {
@@ -196,7 +196,7 @@ function Box({ id }: BoxProps) {
             <input
               type="number"
               step="1.0"
-              value={inputDelta}
+              value={currentVoltage}
               onChange={(e) => setCurrentVoltage(parseFloat(e.target.value))}
               className="bg-gray-700 text-white rounded px-2 py-1 w-28 text-center"
             />
