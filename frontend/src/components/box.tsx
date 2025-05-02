@@ -96,8 +96,8 @@ function Box({ id }: BoxProps) {
 
     try {
       const res = await axios.post(
-        route + "changeDelta/${id}/${inputDelta}"
-      );
+        `${route}changeDelta/${id}/${inputDelta}`
+      );      
       console.log("Response:", res.data);
       setDelta(inputDelta); // update local state
     } catch (err) {
@@ -114,8 +114,8 @@ function Box({ id }: BoxProps) {
 
     try {
       const res = await axios.post(
-        route + "changeVoltage/${id}/${currentVoltage}"
-      );
+        `${route}changeVoltage/${id}/${currentVoltage}`
+      );      
       console.log("Response:", res.data);
     } catch (err) {
       console.error("Error updating delta:", err);
