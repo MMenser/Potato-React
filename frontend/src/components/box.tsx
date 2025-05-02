@@ -25,7 +25,7 @@ function Box({ id }: BoxProps) {
   const [averageTemperature, setAverageTemperature] = useState(0.0);
   const [ambientTemperature, setAmbientTemperature] = useState(0.0);
   const [delta, setDelta] = useState(0);
-  const [currentVoltage, setCurrentVoltage] = useState(0.0);
+  const [currentVoltage, setCurrentVoltage] = useState(0);
   const [exportTimeLimit, setExportTimeLimit] = useState(30);
   const [customTime, setCustomTime] = useState("");
   const [isCustom, setIsCustom] = useState(false);
@@ -95,8 +95,9 @@ function Box({ id }: BoxProps) {
     }
 
     try {
+      const roundedDelta = Math.round(inputDelta)
       const res = await axios.post(
-        `${route}changeDelta/${id}/${inputDelta}`
+        `${route}changeDelta/${id}/${roundedDelta}`
       );      
       console.log("Response:", res.data);
       setDelta(inputDelta); // update local state
@@ -113,8 +114,9 @@ function Box({ id }: BoxProps) {
     }
 
     try {
+      const voltage = Math.round(currentVoltage); // or use Math.floor if rounding is unwanted
       const res = await axios.post(
-        `${route}changeVoltage/${id}/${currentVoltage}`
+        `${route}changeVoltage/${id}/${voltage}`
       );      
       console.log("Response:", res.data);
     } catch (err) {
