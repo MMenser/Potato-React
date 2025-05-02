@@ -21,13 +21,15 @@ interface GraphData {
   timestamp: number;
 }
 
+const route = "https://api.potatoheatbox.live/";
+
 function datagraph({ id, whichGraph }: GraphProps) {
   const [timeScale, setTimeScale] = useState(30); // Default time scale = limit of how many data points to show - data inserted every 1 minute
   const [data, setData] = useState<GraphData[]>([]);
 
   const fetchAPI = async () => {
     try {
-      const response = await axios.get("http://10.109.202.69:5000/getData/" + id + "/" + timeScale); // Get the most recent data point for this box
+      const response = await axios.get(route + "getData/" + id + "/" + timeScale); // Get the most recent data point for this box
       console.log("Reponse Data: ", response.data);
       const parsedData: GraphData[] = response.data.map((item: any) => ({
         averageTemperature: item._averageTemperature,

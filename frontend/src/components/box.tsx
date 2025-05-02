@@ -19,6 +19,8 @@ interface BoxProps {
   id: number;
 }
 
+const route = "https://api.potatoheatbox.live/";
+
 function Box({ id }: BoxProps) {
   const [averageTemperature, setAverageTemperature] = useState(0.0);
   const [ambientTemperature, setAmbientTemperature] = useState(0.0);
@@ -38,7 +40,7 @@ function Box({ id }: BoxProps) {
   const fetchAPI = async () => {
     try {
       const response = await axios.get(
-        "http://localhost/getData/" + id + "/1"
+        route + "/getData/" + id + "/1"
       );
       const latest = response.data[0];
       setAverageTemperature(parseFloat(latest._averageTemperature));
@@ -58,7 +60,7 @@ function Box({ id }: BoxProps) {
   const exportData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost/getData/" + id + "/" + exportTimeLimit
+        route + "getData/" + id + "/" + exportTimeLimit
       );
       const data = response.data;
       const headers = Object.keys(data[0]).join(",");
@@ -94,7 +96,7 @@ function Box({ id }: BoxProps) {
 
     try {
       const res = await axios.post(
-        `http://localhost/changeDelta/${id}/${inputDelta}`
+        route + "changeDelta/${id}/${inputDelta}"
       );
       console.log("Response:", res.data);
       setDelta(inputDelta); // update local state
@@ -112,7 +114,7 @@ function Box({ id }: BoxProps) {
 
     try {
       const res = await axios.post(
-        `http://localhost/changeVoltage/${id}/${currentVoltage}`
+        route + "changeVoltage/${id}/${currentVoltage}"
       );
       console.log("Response:", res.data);
     } catch (err) {

@@ -5,6 +5,7 @@ import Box from "./components/box";
 import Login from "./components/login";
 import { useEffect, useState } from "react";
 
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [selectedBox, setSelectedBox] = useState<number>(1); // Track which box is selected
